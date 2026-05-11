@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Minha IA Local e Ilimitada</title>
+    <style>
+        body { font-family: Arial, sans-serif; background: #f4f4f9; padding: 20px; }
+        #chat-box { max-width: 600px; margin: auto; background: white; padding: 20px; border-radius: 8px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); height: 400px; overflow-y: auto; }
+        .msg { margin-bottom: 10px; padding: 10px; border-radius: 5px; }
+        .user { background: #007bff; color: white; text-align: right; }
+        .bot { background: #e9ecef; color: black; text-align: left; }
+        #input-area { max-width: 600px; margin: 20px auto 0; display: flex; gap: 10px; }
+        #user-input { flex: 1; padding: 10px; border: 1px solid #ccc; border-radius: 4px; }
+        button { padding: 10px 20px; background: #007bff; color: white; border: none; border-radius: 4px; cursor: pointer; }
+        button:hover { background: #0056b3; }
+        #status { text-align: center; color: #666; margin-top: 10px; font-style: italic; }
+    </style>
+</head>
+<body>
+
+    <div id="chat-box"></div>
+    <div id="input-area">
+        <input type="text" id="user-input" placeholder="Digite sua mensagem...">
+        <button onclick="enviarMensagem()">Enviar</button>
+    </div>
+    <div id="status">Carregando a IA... Isso pode levar um minuto na primeira vez.</div>
+
+    <!-- Importando a biblioteca Transformers.js direto do CDN -->
+    <script type="module">
+        import { pipeline } from 'https://cdn.jsdelivr.net/npm/@xenova/transformers@2.17.1';
+
+        // Usando um modelo muito leve que funciona no navegador
+        const gerador = await pipeline('text-generation', 'Xenova/Qwen1.5-0.5B-Chat');
+        document.getElementById('status').innerText = 'IA pronta! Pode mandar bala.';
+
+        // Função global para o botão
+        window.enviarMensagem = async function() {
+            const input = document.getElementById('user-input');
+            const texto = input.value;
+            if (!texto) return;
+
+            adicionarNoChat('user', texto);
+            input.value = '';
+            document.getElementById('status').innerText = 'Pensando...';
+
+            try {
+                // Gera a resposta localmente no navegador
+                const resultado = await gerador(texto, { max_new_tokens: 100, temperature: 0.7 });
+                const resposta = resultado[0].generated_text;
+                
+                adicionarNoChat('bot', resposta);
+            } catch (e) {
+                adicionarNoChat('bot', 'Erro ao gerar resposta.');
+                console.error(e);
+            }
+            document.getElementById('status').innerText = 'IA pronta.';
+        }
+
+        function adicionarNoChat(tipo, texto) {
+            const chatBox = document.getElementById('chat-box');
+            const div = document.createElement('div');
+            div.className = `msg ${tipo}`;
+            div.innerText = texto;
+            chatBox.appendChild(div);
+            chatBox.scrollTop = chatBox.scrollHeight;
+        }
+    </script>
+</body>
+</html>
